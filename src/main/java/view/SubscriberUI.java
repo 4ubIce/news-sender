@@ -1,10 +1,11 @@
 package view;
 
-import controller.PublisherController;
 import controller.SubscriberController;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class SubscriberUI extends JFrame {
 
@@ -66,6 +67,11 @@ public class SubscriberUI extends JFrame {
         newsArea.setRows(30);
         bgPanel.add(newsArea, constraints);
 
+        mainFrame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                SubscriberController.doBeforeExit();
+            }
+        });
     }
 
     public JTextArea getNewsArea() {

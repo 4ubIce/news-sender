@@ -1,15 +1,15 @@
 package controller;
 
+import controller.thread.PublisherSocketThread;
 import utils.ControllerHelper;
 import view.PublisherUI;
-
 import javax.swing.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class PublisherController {
 
@@ -17,8 +17,7 @@ public class PublisherController {
     private static PrintWriter pw;
     private static ServerSocket serverSocket;
     private static Socket localSocket;
-    private static ArrayList<Socket> sockets; //контейнер для сбора сокетов подписчиков
-    private static ArrayList<PrintWriter> writers; //контейнер для сбора потоков подписчиков
+    private static HashMap<Socket, PrintWriter> container; //контейнер для сбора сокетов и потоков подписчиков
     private static JTextArea archiveNewsArea;
 
     public PublisherController() {
@@ -26,9 +25,7 @@ public class PublisherController {
         PublisherUI publisherUI = new PublisherUI();
         publisherUI.start();
         archiveNewsArea = publisherUI.getArchiveNewsArea();
-
-        sockets = new ArrayList<>();
-        writers = new ArrayList<>();
+        container = new HashMap<>();
 
 
         try {
@@ -44,8 +41,7 @@ public class PublisherController {
                     //работаем с потоками ввода-вывода
                     localSocket = serverSocket.accept();
                     pw = new PrintWriter(localSocket.getOutputStream(), true); //создаем поток для записи символов в сокет
-                    sockets.add(localSocket);
-                    writers.add(pw);
+                    container.put(localSocket, pw);
                 } catch (Exception ex) {
                     pw.close();
                     localSocket.close();
@@ -54,26 +50,24 @@ public class PublisherController {
                 }
             }
         } catch (IOException e) {
+
+            e.printStackTrace();
+        } finally {
             try {
                 serverSocket.close();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
-            e.printStackTrace();
         }
     }
 
     public static void send(String str) {
 
-        ControllerHelper.updateTextArea(archiveNewsArea, str, 2);
-
-        try {
-            for (PrintWriter writer: writers) {
-                writer.println(str); //отправляем строку в поток
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.out);
-        }
+        ControllerHelper.updateTextArea(archiveNewsArea, str, 2); //обновляем view в основном потоке
+        /*
+            TODO нужно реализовать удаление из контейнера сокетов для уже закрытых подписчиков
+         */
+        new PublisherSocketThread(container, str).start(); //передаем данные в другом потоке
 
     }
 

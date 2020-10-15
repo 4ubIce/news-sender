@@ -2,7 +2,6 @@ package controller;
 
 import utils.ControllerHelper;
 import view.SubscriberUI;
-
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,31 +12,34 @@ public class SubscriberController {
 
     private static final int port = 1222;
     private static final String address = "127.0.0.1";
+    private static boolean stop = false;
     private final JTextArea newsArea;
-    private Socket socket;
-    private BufferedReader br;
+    private static Socket socket;
+    private static BufferedReader br;
 
     public SubscriberController() {
         SubscriberUI subscriberUI = new SubscriberUI();
         subscriberUI.start();
         newsArea = subscriberUI.getNewsArea();
         try {
-            this.socket = new Socket(address, port); //открываем сокет дл€ обращени€ к компьютеру в сети
+            socket = new Socket(address, port); //открываем сокет дл€ обращени€ к компьютеру в сети
             //создаем поток дл€ чтени€ символов из сокета
             //сначала открываем поток сокета - socket.getInputStream()
             //потом преобразовываем его в поток символов - new InputStreamReader
             //потом делаем его читателем строк - BufferedReader
-            this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
             try {
-                this.br.close();
-                this.socket.close();
+                br.close();
+                socket.close();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
             e.printStackTrace();
         }
+
         startReceive();
+
     }
 
     private void startReceive() {
@@ -47,7 +49,7 @@ public class SubscriberController {
         try {
 
             //цикл чтени€
-            while (true) {
+            while (!stop) {
                 str = br.readLine();
                 if (str != null) {
                     ControllerHelper.updateTextArea(newsArea, str, 1);
@@ -56,7 +58,21 @@ public class SubscriberController {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            /*
+                TODO нужно реализовать правильное закрытие сокета и его потока
+            */
+            try {
+                br.close();
+                socket.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
         }
+    }
+
+    public static void doBeforeExit() {
+        stop = true; //останавливаем цикл чтени€ символов из потока
     }
 
 }
