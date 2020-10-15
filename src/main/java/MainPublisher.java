@@ -1,10 +1,10 @@
-import ui.publisher.PublisherUI;
+import controller.PublisherController;
+import view.PublisherUI;
 
 public class MainPublisher {
 
     public static void main(String[] args) {
-        PublisherUI publisherUI = new PublisherUI();
-        publisherUI.start();
+        new PublisherController();
     }
 
 }
