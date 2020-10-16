@@ -38,10 +38,12 @@ public class PublisherReadThread extends Thread {
         try {
             //цикл чтения
             while (!stop) {
-                synchronized (br) {
-                    str = br.readLine();
-                    if (str.equals("stop")) { //как только подписчик прислал сообщение stop, закрываем сокет и удаляем его из контейнера
-                        closeService();
+                if (br != null) {
+                    synchronized (br) {
+                        str = br.readLine();
+                        if (str.equals("stop")) { //как только подписчик прислал сообщение stop, закрываем сокет и удаляем его из контейнера
+                            closeService();
+                        }
                     }
                 }
             }
