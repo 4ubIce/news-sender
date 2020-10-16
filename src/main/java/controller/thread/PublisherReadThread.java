@@ -14,14 +14,20 @@ import java.util.HashMap;
 
 public class PublisherReadThread extends Thread {
 
+    private boolean stop = false;
     private HashMap<Socket, PrintWriter> socketContainer;
     private Socket socket;
-    private BufferedReader br;
+    private final BufferedReader br;
 
-    public PublisherReadThread(HashMap<Socket, PrintWriter> socketContainer, Socket socket) {
+    public PublisherReadThread(HashMap<Socket, PrintWriter> socketContainer, Socket socket) throws IOException {
         this.socketContainer = socketContainer;
         this.socket = socket;
         this.start();
+        //создаем поток для чтения символов из сокета
+        //сначала открываем поток сокета - socket.getInputStream()
+        //потом преобразовываем его в поток символов - new InputStreamReader
+        //потом делаем его читателем строк - BufferedReader
+        br = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
     }
 
     @Override
@@ -30,17 +36,13 @@ public class PublisherReadThread extends Thread {
         String str;
 
         try {
-
-            //создаем поток для чтения символов из сокета
-            //сначала открываем поток сокета - socket.getInputStream()
-            //потом преобразовываем его в поток символов - new InputStreamReader
-            //потом делаем его читателем строк - BufferedReader
-            br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             //цикл чтения
-            while (true) {
-                str = br.readLine();
-                if (str.equals("stop")) { //как только подписчик прислал сообщение stop, закрываем сокет и удаляем его из контейнера
-                    closeService();
+            while (!stop) {
+                synchronized (br) {
+                    str = br.readLine();
+                    if (str.equals("stop")) { //как только подписчик прислал сообщение stop, закрываем сокет и удаляем его из контейнера
+                        closeService();
+                    }
                 }
             }
         } catch (IOException ex) {
@@ -54,6 +56,7 @@ public class PublisherReadThread extends Thread {
 
         if (!socket.isClosed()) {
             try {
+                stop = true; //останавливаем цикл чтения
                 br.close(); //закрываем поток чтения
                 socketContainer.forEach((k, v) -> {
                     if (k.equals(socket)) {

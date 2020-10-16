@@ -13,20 +13,18 @@ import java.util.HashMap;
 
 public class PublisherController {
 
-    private static final int port = 1222;
     private static PrintWriter pw;
     private static ServerSocket serverSocket;
     private static Socket localSocket;
     private static volatile HashMap<Socket, PrintWriter> container; //контейнер для сбора сокетов и потоков подписчиков
     private static JTextArea archiveNewsArea;
 
-    public PublisherController() {
+    public PublisherController(int port) {
 
         PublisherUI publisherUI = new PublisherUI();
         publisherUI.start();
         archiveNewsArea = publisherUI.getArchiveNewsArea();
         container = new HashMap<>();
-
 
         try {
             //открываем серверный сокет (ServerSocket)
@@ -69,7 +67,11 @@ public class PublisherController {
 
     private void startReceive(HashMap<Socket, PrintWriter> container, Socket socket) {
 
-        new PublisherReadThread(container, socket);
+        try {
+            new PublisherReadThread(container, socket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

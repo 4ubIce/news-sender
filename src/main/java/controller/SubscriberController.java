@@ -11,15 +11,13 @@ import java.net.Socket;
 
 public class SubscriberController {
 
-    private static final int port = 1222;
-    private static final String address = "127.0.0.1";
     private static boolean stop = false;
     private final JTextArea newsArea;
     private static Socket socket;
     private static BufferedReader br;
     private static PrintWriter pw;
 
-    public SubscriberController() {
+    public SubscriberController(String address, int port) {
         SubscriberUI subscriberUI = new SubscriberUI();
         subscriberUI.start();
         newsArea = subscriberUI.getNewsArea();
