@@ -10,7 +10,10 @@
 
 ## Компиляция
 
-* в папке проекта (news-sender) выполнить команду: javac -d bin @source.txt
+* в папке проекта (news-sender) выполнить команду:
+```
+ javac -d bin @source.txt
+```
 
 ## Запуск
 
