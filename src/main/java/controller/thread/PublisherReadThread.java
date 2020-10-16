@@ -42,6 +42,7 @@ public class PublisherReadThread extends Thread {
                     str = br.readLine();
                     if (str.equals("stop")) { //как только подписчик прислал сообщение stop, закрываем сокет и удаляем его из контейнера
                         closeService();
+                        stop = true; //останавливаем цикл чтения
                     }
                 }
             }
@@ -56,7 +57,6 @@ public class PublisherReadThread extends Thread {
 
         if (!socket.isClosed()) {
             try {
-                stop = true; //останавливаем цикл чтения
                 br.close(); //закрываем поток чтения
                 socketContainer.forEach((k, v) -> {
                     if (k.equals(socket)) {
