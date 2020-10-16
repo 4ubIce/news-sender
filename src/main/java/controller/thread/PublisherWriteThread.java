@@ -7,12 +7,12 @@ import java.util.HashMap;
 /*
     Класс используется для записи символов строки с сокет
  */
-public class PublisherSocketThread extends Thread {
+public class PublisherWriteThread extends Thread {
 
     private HashMap<Socket, PrintWriter> socketContainer;
     private String str;
 
-    public PublisherSocketThread(HashMap<Socket, PrintWriter> socketContainer, String str) {
+    public PublisherWriteThread(HashMap<Socket, PrintWriter> socketContainer, String str) {
         this.socketContainer = socketContainer;
         this.str = str;
     }

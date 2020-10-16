@@ -1,6 +1,7 @@
 package controller;
 
-import controller.thread.PublisherSocketThread;
+import controller.thread.PublisherReadThread;
+import controller.thread.PublisherWriteThread;
 import utils.ControllerHelper;
 import view.PublisherUI;
 import javax.swing.*;
@@ -9,7 +10,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.Map;
 
 public class PublisherController {
 
@@ -17,7 +17,7 @@ public class PublisherController {
     private static PrintWriter pw;
     private static ServerSocket serverSocket;
     private static Socket localSocket;
-    private static HashMap<Socket, PrintWriter> container; //контейнер для сбора сокетов и потоков подписчиков
+    private static volatile HashMap<Socket, PrintWriter> container; //контейнер для сбора сокетов и потоков подписчиков
     private static JTextArea archiveNewsArea;
 
     public PublisherController() {
@@ -42,15 +42,14 @@ public class PublisherController {
                     localSocket = serverSocket.accept();
                     pw = new PrintWriter(localSocket.getOutputStream(), true); //создаем поток для записи символов в сокет
                     container.put(localSocket, pw);
+                    startReceive(container, localSocket); //запускаем чтение сообщений из сокета на предмет закрытия подписчика
                 } catch (Exception ex) {
                     pw.close();
                     localSocket.close();
-                    serverSocket.close();
                     ex.printStackTrace(System.out);
                 }
             }
         } catch (IOException e) {
-
             e.printStackTrace();
         } finally {
             try {
@@ -64,11 +63,25 @@ public class PublisherController {
     public static void send(String str) {
 
         ControllerHelper.updateTextArea(archiveNewsArea, str, 2); //обновляем view в основном потоке
-        /*
-            TODO нужно реализовать удаление из контейнера сокетов для уже закрытых подписчиков
-         */
-        new PublisherSocketThread(container, str).start(); //передаем данные в другом потоке
+        new PublisherWriteThread(container, str).start(); //передаем данные в другом потоке
 
+    }
+
+    private void startReceive(HashMap<Socket, PrintWriter> container, Socket socket) {
+
+        new PublisherReadThread(container, socket);
+
+    }
+
+    public static void doBeforeExit() {
+        container.forEach((k, v) -> {
+            try {
+                v.close();
+                k.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }); //закрываем все потоки и сокеты в контейнере
     }
 
 }

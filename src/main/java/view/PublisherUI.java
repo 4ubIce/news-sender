@@ -1,9 +1,12 @@
 package view;
 
 import controller.PublisherController;
+import controller.SubscriberController;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class PublisherUI extends JFrame {
 
@@ -97,6 +100,12 @@ public class PublisherUI extends JFrame {
 
         sendButton.addActionListener(e -> {
             PublisherController.send(newNewsArea.getText());
+        });
+
+        mainFrame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                PublisherController.doBeforeExit();
+            }
         });
     }
 
