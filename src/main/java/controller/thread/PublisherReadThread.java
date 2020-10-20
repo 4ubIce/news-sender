@@ -58,17 +58,18 @@ public class PublisherReadThread extends Thread {
         if (!socket.isClosed()) {
             try {
                 br.close(); //закрываем поток чтения
-                socketContainer.forEach((k, v) -> {
-                    if (k.equals(socket)) {
-                        tempSocket[0] = k;
-                        try {
-                            v.close(); //закрываем поток записи
-                            k.close(); //закрываем сокет
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                socketContainer.entrySet()
+                                .stream()
+                                .filter(e -> e.getKey().equals(socket))
+                                .forEach(e -> {
+                                    try {
+                                        e.getValue().close(); //закрываем поток записи
+                                        e.getKey().close(); //закрываем сокет
+                                        tempSocket[0] = e.getKey(); //сохраняем сокет, что бы потом его удалить из контейнера
+                                    } catch (IOException ioException) {
+                                        ioException.printStackTrace();
+                                    }
+                                });
                 socketContainer.remove(tempSocket[0]); //удаляем из контейнера сокет и поток записи
                 this.interrupt(); //останавливаем этот поток
             } catch (IOException e) {
